@@ -94,7 +94,7 @@ class OtpAuthenticator implements OtpAuthInterface
     
         $truncatedHash = $this->hashToInt($hash, $offset) & 0x7FFFFFFF;
     
-        return str_pad((string) ($truncatedHash % $this->pinModulo), $this->passCodeLength, '0', \STR_PAD_LEFT);
+        return str_pad((string) ($truncatedHash % $this->pinModulo), $this->codeLength, '0', \STR_PAD_LEFT);
     }
 
     public function newSecret(): string
