@@ -1,0 +1,20 @@
+{
+    "name": "mincdev/php-otpauth",
+    "description": "A library for genrating a 2 factor authentication QR code",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christopher Smit",
+            "email": "christopher@mincdevelopment.co.za"
+        }
+    ],
+    "require": {
+        "tecnickcom/tc-lib-barcode": "^1.17"
+    },
+    "autoload": {
+        "psr-4": {
+            "MincDev\\OtpAuth\\": "src/"
+        }
+    }
+}
