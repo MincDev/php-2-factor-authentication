@@ -3,6 +3,8 @@
     "description": "A library for genrating a 2 factor authentication QR code",
     "type": "library",
     "license": "MIT",
+    "version": "1.0",
+    "minimum-stability": "stable",
     "authors": [
         {
             "name": "Christopher Smit",
