@@ -1,6 +1,6 @@
 # php-otpauth
 
- A library for genrating a 2 factor authentication QR code to use with Google Authenticator, Authy, etc.
+ A library for generating a 2 factor authentication QR code to use with Google Authenticator, Authy, etc.
  
 ### Secure QRCode Creation
 
@@ -22,7 +22,7 @@ This library requires the **tc-lib-barcode** library found at https://github.com
 
 You can generate a QR code which can be scanned by Google Authenticator, Authy, etc. by using the below.
 
-```
+```php
 $otpAuth = new OtpAuthenticator();
 
 $userName = "MrDoe";
@@ -38,7 +38,7 @@ $qrBase64 = $otpAuth->getQR($userName, $appName, $userSecret);
 
 Once your user logs in, you can validate their pin by making use of the following:
 
-```
+```php
 $otpAuth = new OtpAuthenticator();
 $isValid = $otpAuth->validate($userSecret, $pinCode);
 ```
