@@ -3,35 +3,51 @@
 namespace MincDev\OtpAuth;
 
 use DateTimeInterface;
-
-/**
- * Interface for the OtpAuth class
- *
- * @author Christopher Smit <christopher@mincdevelopment.co.za>
- * @package \MincDev\OtpAuth
- * @license MIT
- */
+use Exception;
+use Random\RandomException;
 
 interface OtpAuthInterface
 {
     /**
-     * @param string $secret
-     * @param string $code
+     * Validate a TOTP code against the supplied secret.
+     *
+     * @throws Exception
      */
     public function validate(string $secret, string $code): bool;
 
     /**
-     * @param string $secret
-     * @param \DateTimeInterface|null $time
+     * Generate the TOTP code for the supplied secret.
+     *
+     * This method is primarily intended for testing,
+     * interoperability and advanced use cases.
+     *
+     * Most applications should use validate() instead.
      */
     public function getCode(string $secret, ?DateTimeInterface $time = null): string;
 
     /**
-     * @param string $accountName
-     * @param string $issuer
-     * @param string $secret
+     * Generate a QR code that can be scanned by compatible
+     * authenticator applications to register the secret.
+     *
+     * Returns a PNG image as a Base64 data URI.
+     *
+     * @throws \Com\Tecnick\Barcode\Exception
+     * @throws \Com\Tecnick\Color\Exception
      */
-    public function getQR(string $accountName, string $issuer, string $secret): string;
+    public function getQR(string $accountName, ?string $issuer, string $secret): string;
 
+    /**
+     * Generate a new Base32-encoded secret suitable for TOTP.
+     *
+     * @throws RandomException
+     */
     public function newSecret(): string;
+
+    /**
+     * Returns the standard otpauth:// URI for the TOTP configuration.
+     *
+     * This URI can be used with any QR code generation library or encoded
+     * as a QR code for provisioning compatible authenticator applications.
+     */
+    public function getUri(string $accountName, ?string $issuer, string $secret): string;
 }

@@ -1,34 +1,121 @@
 <?php
 
+declare(strict_types=1);
+
+session_start();
+
 use MincDev\OtpAuth\OtpAuthenticator;
 
-require "../vendor/autoload.php";
+require __DIR__ . '/../vendor/autoload.php';
 
-$authCode = new OtpAuthenticator();
+$auth = new OtpAuthenticator();
 
-$qrCode = $authCode->getQR("John Doe", "Some Site", $authCode->newSecret());
+$error = null;
+$isValid = null;
 
-echo "
+try {
+    $_SESSION['secret'] ??= $auth->newSecret();
+    $secret = $_SESSION['secret'];
+    $qrCode = $auth->getQR('John Doe', 'Some Site', $secret);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $code = trim($_POST['code'] ?? '');
+        $isValid = $auth->validate($secret, $code);
+    }
+} catch (Throwable $e) {
+    $error = $e->getMessage();
+}
+?>
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Usage example of PHP-OtpAuth library</title>
-        <meta charset=\"utf-8\">
-        <style>
-            body {font-family:Arial, Helvetica, sans-serif;margin:30px;}
-            table {border: 1px solid black;}
-            th {border: 1px solid black;padding:4px;background-barcode:cornsilk;}
-            td {border: 1px solid black;padding:4px;}
-            h3 {color:darkblue;}
-            h4 {color:darkgreen;}
-            h4 span  {color:firebrick;}
-        </style>
-    </head>
-    <body>
-        <h1>Usage example of PHP-OtpAuth library</h1>
-        <p>This is an usage example of <a href=\"\" title=\"PHP library to generate a google authenticator barcode\">PHP-OtpAuth</a> library.</p>
-        <h2>QR Code Output</h2>
-        <p><img alt=\"Embedded Image\" src=\"data:image/png;base64,".$qrCode."\" /></p>
-    </body>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PHP-OtpAuth Usage Example</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 30px;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 16px;
+            width: 150px;
+        }
+
+        button {
+            padding: 8px 16px;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>PHP-OtpAuth Usage Example</h1>
+
+<p>
+    Scan the QR code below using a compatible authenticator application,
+    such as Google Authenticator, Microsoft Authenticator or Authy.
+</p>
+
+<?php if ($error !== null): ?>
+
+    <p class="error"><?= htmlspecialchars($error) ?></p>
+
+<?php else: ?>
+
+    <h2>Your Secret</h2>
+
+    <p>
+        <code><?= htmlspecialchars($secret) ?></code>
+    </p>
+
+    <h2>QR Code</h2>
+
+    <p>
+        <img src="<?= $qrCode ?>" alt="Authenticator QR Code">
+    </p>
+
+    <h2>Validate a Code</h2>
+
+    <form method="post">
+        <input
+            type="text"
+            name="code"
+            maxlength="6"
+            placeholder="123456"
+            autocomplete="one-time-code"
+            required
+        >
+
+        <button type="submit">
+            Validate
+        </button>
+    </form>
+
+    <?php if ($isValid !== null): ?>
+
+        <p class="<?= $isValid ? 'success' : 'error' ?>">
+            <?= $isValid ? '✔ Code is valid.' : '✘ Invalid code.' ?>
+        </p>
+
+    <?php endif; ?>
+
+<?php endif; ?>
+
+</body>
 </html>
-";
