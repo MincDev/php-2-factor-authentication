@@ -1,46 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MincDev\OtpAuth;
 
 /**
-* FixedBitNotation
+* Encodes and decodes binary data using fixed-bit encoding schemes,
+* such as Base32.
 *
-* The FixedBitNotation class is for binary to text conversion. It
-* can handle many encoding schemes, formally defined or not, that
-* use a fixed number of bits to encode each character.
+* Original implementation by André DeMarre
 *
-* @author Andre DeMarre
+* @author André DeMarre
 * @package FixedBitNotation
 */
 class FixedBitNotation
 {
-    protected $_chars;
-    protected $_bitsPerCharacter;
-    protected $_radix;
-    protected $_rightPadFinalBits;
-    protected $_padFinalGroup;
-    protected $_padCharacter;
-    protected $_charmap;
-    
+    private const BASE_CHAR_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-,';
+
+    private readonly string $chars;
+    private readonly int $bitsPerCharacter;
+    private readonly int $radix;
+    private readonly bool $rightPadFinalBits;
+    private readonly bool $padFinalGroup;
+    private readonly string $padCharacter;
+    /** @var array<string, int>|null */
+    private ?array $charMap = null;
+
     /**
-    * Constructor
-    *
-    * @param integer $bitsPerCharacter Bits to use for each encoded
-    *                character
-    * @param string  $chars Base character alphabet
-    * @param boolean $rightPadFinalBits How to encode last character
-    * @param boolean $padFinalGroup Add padding to end of encoded
-    *                output
-    * @param string  $padCharacter Character to use for padding
-    */
+     * Constructor
+     *
+     * @param integer $bitsPerCharacter Bits to use for each encoded
+     *                character
+     * @param string $chars Base character alphabet
+     * @param boolean $rightPadFinalBits How to encode last character
+     * @param boolean $padFinalGroup Add padding to end of encoded
+     *                output
+     * @param string $padCharacter Character to use for padding
+     */
     public function __construct(
-    $bitsPerCharacter, $chars = NULL, $rightPadFinalBits = FALSE,
-    $padFinalGroup = FALSE, $padCharacter = '=')
+        int    $bitsPerCharacter,
+        string $chars = self::BASE_CHAR_ALPHABET,
+        bool   $rightPadFinalBits = false,
+        bool   $padFinalGroup = false,
+        string $padCharacter = '=')
     {
         // Ensure validity of $chars
         if (!is_string($chars) || ($charLength = strlen($chars)) < 2) {
-            $chars = 
-            '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-,';
+            $chars = self::BASE_CHAR_ALPHABET;
             $charLength = 64;
         }
         
@@ -71,21 +77,21 @@ class FixedBitNotation
             $radix = 1 << $bitsPerCharacter;
         }
         
-        $this->_chars = $chars;
-        $this->_bitsPerCharacter = $bitsPerCharacter;
-        $this->_radix = $radix;
-        $this->_rightPadFinalBits = $rightPadFinalBits;
-        $this->_padFinalGroup = $padFinalGroup;
-        $this->_padCharacter = $padCharacter[0];
+        $this->chars = $chars;
+        $this->bitsPerCharacter = $bitsPerCharacter;
+        $this->radix = $radix;
+        $this->rightPadFinalBits = $rightPadFinalBits;
+        $this->padFinalGroup = $padFinalGroup;
+        $this->padCharacter = $padCharacter[0];
     }
     
     /**
     * Encode a string
     *
-    * @param  string $rawString Binary data to encode
+    * @param string $rawString Binary data to encode
     * @return string
     */
-    public function encode($rawString)
+    public function encode(string $rawString): string
     {
         // Unpack string into an array of bytes
         $bytes = unpack('C*', $rawString);
@@ -95,11 +101,11 @@ class FixedBitNotation
         $byte = array_shift($bytes);
         $bitsRead = 0;
         
-        $chars = $this->_chars;
-        $bitsPerCharacter = $this->_bitsPerCharacter;
-        $rightPadFinalBits = $this->_rightPadFinalBits;
-        $padFinalGroup = $this->_padFinalGroup;
-        $padCharacter = $this->_padCharacter;
+        $chars = $this->chars;
+        $bitsPerCharacter = $this->bitsPerCharacter;
+        $rightPadFinalBits = $this->rightPadFinalBits;
+        $padFinalGroup = $this->padFinalGroup;
+        $padCharacter = $this->padCharacter;
         
         // Generate encoded output; 
         // each loop produces one encoded character
@@ -116,19 +122,21 @@ class FixedBitNotation
                 
                 if (!$bytes) {
                     // Last bits; match final character and exit loop
-                    if ($rightPadFinalBits) $oldBits <<= $newBitCount;
+                    if ($rightPadFinalBits) {
+                        $oldBits <<= $newBitCount;
+                    }
                     $encodedString .= $chars[$oldBits];
                     
                     if ($padFinalGroup) {
                         // Array of the lowest common multiples of 
                         // $bitsPerCharacter and 8, divided by 8
-                        $lcmMap = array(1 => 1, 2 => 1, 3 => 3, 4 => 1,
-                        5 => 5, 6 => 3, 7 => 7, 8 => 1);
+                        $lcmMap = [1 => 1, 2 => 1, 3 => 3, 4 => 1,
+                        5 => 5, 6 => 3, 7 => 7, 8 => 1];
                         $bytesPerGroup = $lcmMap[$bitsPerCharacter];
                         $pads = $bytesPerGroup * 8 / $bitsPerCharacter 
                         - ceil((strlen($rawString) % $bytesPerGroup)
                         * 8 / $bitsPerCharacter);
-                        $encodedString .= str_repeat($padCharacter[0], $pads);
+                        $encodedString .= str_repeat($padCharacter[0], (int) $pads);
                     }
                     
                     break;
@@ -144,12 +152,12 @@ class FixedBitNotation
             }
             
             // Read only the needed bits from this byte
-            $bits = $byte >> 8 - ($bitsRead + ($newBitCount));
+            $bits = $byte >> (8 - ($bitsRead + ($newBitCount)));
             $bits ^= $bits >> $newBitCount << $newBitCount;
             $bitsRead += $newBitCount;
             
             if ($oldBitCount) {
-                // Bits come from seperate bytes, add $oldBits to $bits
+                // Bits come from separate bytes, add $oldBits to $bits
                 $bits = ($oldBits << $newBitCount) | $bits;
             }
             
@@ -162,39 +170,37 @@ class FixedBitNotation
     /**
     * Decode a string
     *
-    * @param  string  $encodedString Data to decode
-    * @param  boolean $caseSensitive
-    * @param  boolean $strict Returns NULL if $encodedString contains
+    * @param string $encodedString Data to decode
+    * @param boolean $caseSensitive
+    * @param boolean $strict Returns NULL if $encodedString contains
     *                 an undecodable character
     * @return string|NULL
     */
-    public function decode($encodedString, $caseSensitive = TRUE,
-    $strict = FALSE)
+    public function decode(string $encodedString, bool $caseSensitive = true, bool $strict = false): ?string
     {
-        if (!$encodedString || !is_string($encodedString)) {
+        if (!$encodedString) {
             // Empty string, nothing to decode
             return '';
         }
         
-        $chars = $this->_chars;
-        $bitsPerCharacter = $this->_bitsPerCharacter;
-        $radix = $this->_radix;
-        $rightPadFinalBits = $this->_rightPadFinalBits;
-        $padFinalGroup = $this->_padFinalGroup;
-        $padCharacter = $this->_padCharacter;
+        $chars = $this->chars;
+        $bitsPerCharacter = $this->bitsPerCharacter;
+        $radix = $this->radix;
+        $rightPadFinalBits = $this->rightPadFinalBits;
+        $padCharacter = $this->padCharacter;
         
         // Get index of encoded characters
-        if ($this->_charmap) {
-            $charmap = $this->_charmap;
+        if ($this->charMap) {
+            $charmap = $this->charMap;
             
         } else {
-            $charmap = array();
+            $charmap = [];
             
             for ($i = 0; $i < $radix; $i++) {
                 $charmap[$chars[$i]] = $i;
             }
             
-            $this->_charmap = $charmap;
+            $this->charMap = $charmap;
         }
         
         // The last encoded character is $encodedString[$lastNotatedIndex]
@@ -265,7 +271,7 @@ class FixedBitNotation
                 
             } elseif ($strict) {
                 // Unable to decode character; abort
-                return NULL;
+                return null;
             }
         }
         

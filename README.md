@@ -1,44 +1,86 @@
-# php-otpauth
+# PHP-OtpAuth
 
- A library for generating a 2 factor authentication QR code to use with Google Authenticator, Authy, etc.
- 
-### Secure QRCode Creation
+[![Tests](https://github.com/mincdev/php-otpauth/actions/workflows/run-tests.yml/badge.svg)](https://github.com/mincdev/php-otpauth/actions/workflows/run-tests.yml)
 
-This library has secure QRCode creation because of the fact that the QRCode is generated locally on your server. This means that the user's secret is not passed to any third party or remote server in order to generate a code. This was inspired by the stack overflow answer by **kravietz** as seen [here](https://stackoverflow.com/a/56737468/3948544)
+A lightweight PHP library for generating and validating **Time-based One-Time Passwords (TOTP)** compatible with Google Authenticator, Microsoft Authenticator, Authy, 1Password, Bitwarden, and other RFC 6238 compatible authenticator applications.
 
-### Installation (Composer)
+## Features
 
-```
+- 🔒 Generate cryptographically secure TOTP secrets
+- 📱 Generate QR codes for easy authenticator app provisioning
+- ✅ Validate one-time passwords
+- 🧪 Verified against the official **RFC 6238** test vectors
+- 🖥️ QR codes are generated locally on your server — no secrets are sent to third-party services
+- 🚀 Lightweight with minimal dependencies
+
+## Installation
+
+Install the package using Composer:
+
+```bash
 composer require mincdev/php-otpauth
 ```
 
-### Dependencies
-
-This library requires the **tc-lib-barcode** library found at https://github.com/tecnickcom/tc-lib-barcode. 
-
-**Note:** The tc-lib-barcode library is maintained and owned by a separate entity.
-
-#### Generating a QR Code
-
-You can generate a QR code which can be scanned by Google Authenticator, Authy, etc. by using the below.
+## Generating a Secret and QR Code
 
 ```php
-$otpAuth = new OtpAuthenticator();
+use MincDev\OtpAuth\OtpAuthenticator;
 
-$userName = "MrDoe";
-$appName = "My Awesome App";
+$otp = new OtpAuthenticator();
 
-// Store this secret somewhere safe, as you'll need it to validate the pin later
-$userSecret = $otpAuth->newSecret();
+// Store the secret securely for the user.
+$secret = $otp->newSecret();
 
-$qrBase64 = $otpAuth->getQR($userName, $appName, $userSecret);
+$qrCode = $otp->getQR(
+    'john.doe@example.com',
+    'My Awesome App',
+    $secret
+);
 ```
 
-#### Validating a PIN
+The returned value is a Base64 data URI that can be used directly in an image tag:
 
-Once your user logs in, you can validate their pin by making use of the following:
+```html
+<img src="<?= $qrCode ?>" alt="Authenticator QR Code">
+```
+
+## Validating a Code
 
 ```php
-$otpAuth = new OtpAuthenticator();
-$isValid = $otpAuth->validate($userSecret, $pinCode);
+use MincDev\OtpAuth\OtpAuthenticator;
+
+$otp = new OtpAuthenticator();
+
+$isValid = $otp->validate($secret, $userEnteredCode);
 ```
+
+## Security
+
+This library generates QR codes **entirely on your server**. The user's secret is never transmitted to an external QR code generation service, ensuring that sensitive authentication data remains under your control.
+
+QR code generation is powered by `tc-lib-barcode`.
+
+## Compatibility
+
+This library implements **RFC 6238 (TOTP)** and works with applications such as:
+
+- Google Authenticator
+- Microsoft Authenticator
+- Authy
+- 1Password
+- Bitwarden
+- and other compatible authenticator apps.
+
+## Testing
+
+The TOTP implementation is verified against the official **RFC 6238** test vectors to ensure standards-compliant code generation.
+
+Run the test suite with:
+
+```bash
+composer test
+```
+
+## License
+
+Released under the MIT License.

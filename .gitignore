@@ -1,2 +1,29 @@
+# Composer
 /vendor/
+
+# Lock file (libraries typically don't commit this)
 composer.lock
+
+# PHPUnit
+.phpunit.cache/
+
+# IDEs
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Coverage reports
+coverage/
+coverage.xml
+
+# PHPUnit reports
+testdox.html
+testdox.txt
+
+# Xdebug profiling
+cachegrind.out.*
