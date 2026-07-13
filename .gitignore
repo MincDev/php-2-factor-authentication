@@ -1,9 +1,6 @@
 # Composer
 /vendor/
 
-# Lock file (libraries typically don't commit this)
-composer.lock
-
 # PHPUnit
 .phpunit.cache/
 
