@@ -1,6 +1,11 @@
 # PHP-OtpAuth
 
 [![Tests](https://github.com/mincdev/php-otpauth/actions/workflows/run-tests.yml/badge.svg)](https://github.com/mincdev/php-otpauth/actions/workflows/run-tests.yml)
+[![Latest Version](https://img.shields.io/packagist/v/mincdev/php-otpauth.svg)](https://packagist.org/packages/mincdev/php-otpauth)
+[![PHP Version](https://img.shields.io/packagist/php-v/mincdev/php-otpauth.svg)](https://packagist.org/packages/mincdev/php-otpauth)
+[![Downloads](https://img.shields.io/packagist/dt/mincdev/php-otpauth.svg)](https://packagist.org/packages/mincdev/php-otpauth)
+[![License](https://img.shields.io/packagist/l/mincdev/php-otpauth.svg)](LICENSE)
+![RFC 6238](https://img.shields.io/badge/RFC-6238-success)
 
 A lightweight PHP library for generating and validating **Time-based One-Time Passwords (TOTP)** compatible with Google Authenticator, Microsoft Authenticator, Authy, 1Password, Bitwarden, and other RFC 6238 compatible authenticator applications.
 
